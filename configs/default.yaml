@@ -1,0 +1,145 @@
+# Common
+run:
+  make_plots: false   # step1 plot display
+  nproc: null         # null -> auto
+
+paths:
+  seed_dir: seed_data
+
+# Step1: target spectra generation (xlsx)
+step1_rg160:
+  x_min_fixed: 0.01
+  x_max_fixed: 10.0
+  a0: 0.03
+  b0: 0.1
+  c0: 0.3
+  d0: 3.0
+
+  
+  y_b_list: [0.8, 0.5,  0.3, 0.1]
+
+  # 자유도 1: base b0 범위
+  b_min: 0.021
+  b_max: 0.225
+  Nb: 7
+
+  # 자유도 2: base c0 범위 (실제 c = c0 * (b/b0))
+  c0_min: 0.04
+  c0_max: 0.9
+  Nc: 9
+
+  # c-b 간격 조건 (YAML에서 조절)
+  min_cb_gap: 0.019
+  max_cb_gap: 0.7
+
+  r_pos_max: 1.4
+  r_neg_min: 0.7
+  N_pos: 3
+  N_neg: 3
+  include_zero: true
+
+
+  # 총 점 수는 유지하고, 앞/뒤 구간이 잘리면 seg2/seg3에 재분배
+  N1: 20
+  N2: 70
+  N3: 130
+  N4: 70
+  N5: 30
+
+# Step2: split xlsx -> txt
+step2_take_spec:
+  filename_digits: 6
+  save_fmt: "%.10g"
+  delimiter: "\t"
+
+# Step3: EQ generation
+step3_eq_gen:
+  N_GM: 40 # 하나의 spec 당 생성 수
+  dt: 0.005
+  zeta: 0.05
+  reqpy:
+    T1: 0.03
+    T2: 9.0
+    nit: 5 #램덤 요소1 
+  
+  target_perturb:
+    sigma: 0.05 #램덤 요소1
+    smooth_window: 5
+    clip_min: 0.8
+    clip_max: 1.20
+  
+  seed_perturb:
+    noise_std_ratio: 0.1 #램덤 요소2 
+    max_shift: 50
+    spectral_perturb_ratio: 0.10
+    keep_rms: true
+ 
+  reproducibility:
+    base_seed: 22225
+  
+  seed_type_selector:
+    separator: "l"
+    param_names: [b, y_b, c, y_c]
+    # step2 파일명 순서와 맞춰서 지정
+    # 현재 step2 기본 파일명: b l y_b l c l y_c.txt
+    # 비워두면 seed_data/*.txt 전체를 사용
+    #type_conditions: {}
+    #type_conditions:
+    #   type1:
+    #     b:   {min: 0, max: 0.07, include_min: true, include_max: false}
+    #     c:   {min: 0, max: 0.15, include_min: true, include_max: false}
+    #   type2:
+    #     b:   {min: 0.04, max: 0.095, include_min: true, include_max: false}
+    #     c:   {min: 0.15, max: 0.25, include_min: true, include_max: false}
+    #   type3:
+    #     b:   {min: 0.04, max: 0.095, include_min: true, include_max: false}
+    #     c:   {min: 0.25, max: 0.45, include_min: true, include_max: false}
+    #   type4:
+    #     b:   {min: 0.095, max: 10, include_min: true, include_max: false}
+    #     c:   {min: 0.15, max: 0.55, include_min: true, include_max: false}
+    #   type5:
+    #     c:   {min: 0.55, max: 10, include_min: true, include_max: false}
+
+    type_conditions:
+      type1:
+        b:      {min: 0, max: 0.07, include_min: true, include_max: false}
+        cb_gap: {min: 0, max: 0.12, include_min: true, include_max: false}
+
+      type2:
+        b:      {min: 0, max: 0.07, include_min: true, include_max: false}
+        cb_gap: {min: 0.12, max: 10, include_min: true, include_max: false}
+      
+      type3:
+        b:      {min: 0.07, max: 0.11, include_min: true, include_max: false}
+        cb_gap: {min: 0, max: 0.2, include_min: true, include_max: false}
+
+      type4:
+        b:      {min: 0.07, max: 0.11, include_min: true, include_max: false}
+        cb_gap: {min: 0.2, max: 10, include_min: true, include_max: false}
+      
+      type5:
+        b:      {min: 0.11, max: 10, include_min: true, include_max: false}
+        cb_gap: {min: 0, max: 0.31, include_min: true, include_max: false}
+      
+      type6:
+        b:      {min: 0.11, max: 10, include_min: true, include_max: false}
+        cb_gap: {min: 0.31, max: 10, include_min: true, include_max: false}
+
+       
+
+# Step4: PSA plot/export
+step4_sa_plot:
+  dt: 0.005
+  zeta: 0.05
+  T_min: 0.015
+  T_max: 10.0
+  nT: 450
+  export:
+    format: npz   # xlsx | npz
+
+# Step5: collect dataset
+step5_collect:
+  input_format: npz   # xlsx | npz
+  output:
+    X_name: input_f_train.csv
+    y_name: y_train.csv
